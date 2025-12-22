@@ -21,4 +21,6 @@ https://blog.xpnsec.com/linux-process-injection-aka-injecting-into-sshd-for-fun/
 
 https://blog.hackingforce.com.br/en/linux-process-injection?referrer=grok.com
 
+https://github.com/farinap5/linux-injection/tree/main
+
 Perhaps, disabling ASLR would make the process simpler, turning off address randomization. `echo 0 > /proc/sys/kernel/randomize_va_space`
