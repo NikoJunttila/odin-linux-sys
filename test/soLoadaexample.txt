@@ -1,0 +1,46 @@
+package main
+
+import "core:c"
+import "core:fmt"
+
+when ODIN_OS == .Linux {
+	foreign import dl "system:dl"
+
+	RTLD_LAZY :: 0x00001
+	RTLD_NOW :: 0x00002
+	RTLD_GLOBAL :: 0x00100
+
+	@(default_calling_convention = "c")
+	foreign dl {
+		dlopen :: proc(filename: cstring, flag: c.int) -> rawptr ---
+		dlsym :: proc(handle: rawptr, symbol: cstring) -> rawptr ---
+		dlclose :: proc(handle: rawptr) -> c.int ---
+		dlerror :: proc() -> cstring ---
+	}
+}
+
+main :: proc() {
+	when ODIN_OS == .Linux {
+		// Open libdl.so
+		lib_dl_handle := dlopen("libdl.so.2", RTLD_LAZY)
+		if lib_dl_handle == nil {
+			fmt.println("Failed to open libdl.so.2:", dlerror())
+			return
+		}
+		defer dlclose(lib_dl_handle)
+
+		// Get dlopen address
+		dlopen_addr := dlsym(lib_dl_handle, "dlopen")
+		if dlopen_addr == nil {
+			fmt.println("Failed to find dlopen:", dlerror())
+			return
+		}
+
+		lib_dl_addr := uintptr(lib_dl_handle)
+		dlopen_addr_val := uintptr(dlopen_addr)
+
+		fmt.printf("libdl address: %x\n", lib_dl_addr)
+		fmt.printf("dlopen address: %x\n", dlopen_addr_val)
+		fmt.printf("Offset: %x\n", dlopen_addr_val - lib_dl_addr)
+	}
+}

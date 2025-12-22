@@ -1,0 +1,152 @@
+package main
+
+import "core:fmt"
+import "core:mem"
+import "core:os/os2"
+import "core:strconv"
+import "core:sys/linux"
+
+main :: proc() {
+	if len(os2.args) < 2 {
+		fmt.println("usage: ./inject <pid>")
+		return
+	}
+
+	pid_int, ok := strconv.parse_int(os2.args[1])
+	assert(ok)
+	pid := linux.Pid(pid_int)
+
+	// 1. Attach to process
+	if errno := linux.ptrace(linux.PTRACE_ATTACH, pid); errno != .NONE {
+		fmt.println("attach failed:", errno)
+		return
+	}
+	defer linux.ptrace(linux.PTRACE_DETACH, pid, 0)
+
+	// 2. Wait for process to stop
+	status: u32
+	usage: linux.RUsage
+	if _, errno := linux.waitpid(pid, &status, {.WSTOPPED}, &usage); errno != .NONE {
+		fmt.println("waitpid failed:", errno)
+		return
+	}
+
+	// 3. Backup original registers
+	old_regs: linux.User_Regs
+	if errno := linux.ptrace(linux.PTRACE_GETREGS, pid, &old_regs); errno != .NONE {
+		fmt.println("getregs failed:", errno)
+		return
+	}
+
+	// 4. Find executable memory region
+	// Read /proc/<pid>/maps to find an executable region
+	maps_path := fmt.tprintf("/proc/%d/maps", pid_int)
+	maps_data, read_ok := os2.read_entire_file(maps_path)
+	if !read_ok {
+		fmt.println("failed to read maps")
+		return
+	}
+	defer delete(maps_data)
+
+	// Parse first line to get an executable address (simplified)
+	// Format: "address-address perms ..."
+	// We'll use RIP's current location as injection point for simplicity
+	inject_addr := old_regs.rip
+	fmt.printf("Injecting at: 0x%x\n", inject_addr)
+
+	// 5. Backup original code at injection point
+	BACKUP_SIZE :: 8 // 8 words (64 bytes on x86-64)
+	backup: [BACKUP_SIZE]u64
+	for i in 0 ..< BACKUP_SIZE {
+		addr := inject_addr + u64(i * 8)
+		word := linux.ptrace(linux.PTRACE_PEEKTEXT, pid, rawptr(uintptr(addr)))
+		if word < 0 {
+			fmt.println("peektext failed")
+			return
+		}
+		backup[i] = u64(word)
+	}
+
+	// 6. Create simple shellcode (just a software interrupt for demo)
+	// int3 instruction (0xCC) causes SIGTRAP
+	shellcode := [?]u8 {
+		0xCC, // int3 - software breakpoint
+		0x90,
+		0x90,
+		0x90,
+		0x90,
+		0x90,
+		0x90,
+		0x90, // nops for padding
+	}
+
+	// 7. Write shellcode to target process
+	for i := 0; i < len(shellcode); i += 8 {
+		// Pack 8 bytes into a u64 word
+		word: u64 = 0
+		for j in 0 ..< 8 {
+			if i + j < len(shellcode) {
+				word |= u64(shellcode[i + j]) << uint(j * 8)
+			}
+		}
+
+		addr := inject_addr + u64(i)
+		if errno := linux.ptrace(
+			linux.PTRACE_POKETEXT,
+			pid,
+			rawptr(uintptr(addr)),
+			rawptr(uintptr(word)),
+		); errno != .NONE {
+			fmt.println("poketext failed:", errno)
+			return
+		}
+	}
+
+	// 8. Set RIP to injected code
+	new_regs := old_regs
+	new_regs.rip = inject_addr
+	if errno := linux.ptrace(linux.PTRACE_SETREGS, pid, &new_regs); errno != .NONE {
+		fmt.println("setregs failed:", errno)
+		return
+	}
+
+	// 9. Continue execution
+	if errno := linux.ptrace(linux.PTRACE_CONT, pid); errno != .NONE {
+		fmt.println("cont failed:", errno)
+		return
+	}
+
+	// 10. Wait for SIGTRAP from our int3 instruction
+	if _, errno := linux.waitpid(pid, &status, {.WUNTRACED}, &usage); errno != .NONE {
+		fmt.println("waitpid 2 failed:", errno)
+		return
+	}
+
+	if linux.WIFSTOPPED(status) && linux.WSTOPSIG(status) == .SIGTRAP {
+		fmt.println("SIGTRAP received - injected code executed!")
+	}
+
+	// 11. Restore original memory
+	for i in 0 ..< BACKUP_SIZE {
+		addr := inject_addr + u64(i * 8)
+		word := backup[i]
+		if errno := linux.ptrace(
+			linux.PTRACE_POKETEXT,
+			pid,
+			rawptr(uintptr(addr)),
+			rawptr(uintptr(word)),
+		); errno != .NONE {
+			fmt.println("restore failed:", errno)
+			return
+		}
+	}
+
+	// 12. Restore original registers
+	if errno := linux.ptrace(linux.PTRACE_SETREGS, pid, &old_regs); errno != .NONE {
+		fmt.println("restore regs failed:", errno)
+		return
+	}
+
+	fmt.println("Done! Process restored.")
+	// Detach happens in defer
+}
