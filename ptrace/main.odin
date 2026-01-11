@@ -19,8 +19,6 @@ main :: proc() {
 		fmt.println(errno, " problem with attach")
 		return
 	}
-	//same as above?
-	// linux.ptrace_attach(linux.PTRACE_ATTACH, linux.Pid(pid_int))
 
 	status: u32
 	usage: linux.RUsage

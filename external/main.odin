@@ -1,5 +1,6 @@
 package main
 
+import "../utils/pidbyname/"
 import "base:intrinsics"
 import "core:fmt"
 import "core:sys/linux"
@@ -52,14 +53,16 @@ process_vm_writev :: proc "contextless" (
 
 main :: proc() {
 	//find pid manually for now
-	target_pid := linux.Pid(47065)
+	target_pid := pidbyname.pid_by_name("game")
+	assert(target_pid != 0)
 	//find values memory address manually using PINCE
-	remote_addr := rawptr(uintptr(0x7ffc7ae74dc0))
+	fmt.printfln("target pid %d", target_pid)
+	remote_addr := uintptr(0x7FFF6BA79280)
 
 	// Read current value
 	value: i64
-	local := []linux.IO_Vec{{base = &value, len = size_of(i64)}}
-	remote := []linux.IO_Vec{{base = remote_addr, len = size_of(i64)}}
+	local := []linux.IO_Vec{{base = cast([^]byte)&value, len = size_of(value)}}
+	remote := []linux.IO_Vec{{base = cast([^]byte)remote_addr, len = size_of(i64)}}
 
 	_, err := process_vm_readv(target_pid, local, remote)
 	if err != .NONE {
@@ -70,7 +73,7 @@ main :: proc() {
 
 	// Write new value
 	new_value: i64 = 12345
-	local_write := []linux.IO_Vec{{base = &new_value, len = size_of(i64)}}
+	local_write := []linux.IO_Vec{{base = cast([^]byte)&new_value, len = size_of(i64)}}
 
 	_, err = process_vm_writev(target_pid, local_write, remote)
 	if err != .NONE {
