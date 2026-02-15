@@ -1,21 +1,17 @@
 .PHONY: all clean game inject injector
 
-all: game inject injector
+all: game injector
 
 # Build the 32-bit Odin game
 game:
-	odin build . -target:linux_i386 -extra-linker-flags:"-m32" -out:main32
-
-# Build the injectable shared library
-inject:
-	gcc -m32 -shared -fPIC -o inject.so inject.c
+	odin build . -target:linux_i386 -extra-linker-flags:"-m32" -out:game32
 
 # Build the ptrace injector
 injector:
 	gcc -m32 -o injector injector.c -ldl
 
 clean:
-	rm -f main32 inject.so injector
+	rm -f main32 injector
 
 # Usage instructions
 help:
