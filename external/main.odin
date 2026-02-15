@@ -4,22 +4,32 @@ import "../utils/pidbyname/"
 import "base:intrinsics"
 import "core:bytes"
 import "core:fmt"
+import os "core:os/os2"
+import "core:strconv"
 import "core:sys/linux"
 
 
 main :: proc() {
 	target_pid := pidbyname.pid_by_name("game")
-	// fmt.printfln("target pid %d", target_pid)
 	assert(target_pid != 0)
 
-	string_addr := uintptr(0x447C29)
+	for arg in os.args {
+		fmt.println(arg)
+	}
+	s_string := os.get_env(os.args[2], context.allocator)
+	string_num, ok := strconv.parse_uint(os.args[2])
+	int_num, ok2 := strconv.parse_uint(os.args[1])
+	assert(ok && ok2)
+
+	string_addr := uintptr(string_num)
+	int64_addr := uintptr(int_num)
 
 	if value, str_ok := read_cstring_value(target_pid, string_addr); str_ok {
 		fmt.println("string value is: ", value)
 	} else {
 		fmt.println("failed to read string")
 	}
-	// read_ints(target_pid)
+	read_int_and_write(target_pid, int64_addr, 1488)
 }
 
 read_cstring_value :: proc(target_pid: linux.Pid, remote_addr: uintptr) -> (string, bool) {
@@ -77,13 +87,11 @@ write_i64_value :: proc(target_pid: linux.Pid, remote_addr: uintptr, new_value: 
 	return true
 }
 
-read_ints :: proc(target_pid: linux.Pid) {
-	remote_addr := uintptr(0x7FFE7DBD8F00)
+read_int_and_write :: proc(target_pid: linux.Pid, remote_addr: uintptr, new_value: i64) {
 	_, ok := read_i64_value(target_pid, remote_addr)
 	assert(ok == true)
-
-	new_value: i64 = 12345
-	ok = write_i64_value(target_pid, remote_addr, &new_value)
+	value := new_value
+	ok = write_i64_value(target_pid, remote_addr, &value)
 	assert(ok == true)
 
 	read_i64_value(target_pid, remote_addr)

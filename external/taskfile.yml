@@ -1,0 +1,28 @@
+---
+version: "3"
+
+vars:
+  OUT: "bin/external"
+  INT_ADDR: 0xFFCCE738
+  STR_ADDR: 0x80A0278
+
+env:
+  ENVIRONMENT: "testing"
+
+dotenv: ['.env']
+
+tasks:
+  default:
+    desc: Run the odin external cheat
+    deps: [build]
+    cmds:
+      - sudo ./{{.OUT}} {{.INT_ADDR}} {{.STR_ADDR}}
+
+  build:
+    desc: Build the Odin external
+    cmds:
+      - odin build . -out={{.OUT}}
+
+  env:
+    cmds:
+      - echo "Int addr '$INT_ADDR', str $STR_ADDR"
