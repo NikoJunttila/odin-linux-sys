@@ -1,0 +1,30 @@
+---
+version: "3"
+
+vars:
+  OUT: "bin/odingameforlearning"  # default value
+  DEBUG: ""       # default: empty string (normal build)
+
+
+tasks:
+  default:
+    desc: Run the Odin game
+    cmds:
+      - odin run . -out={{.OUT}}
+
+  build:
+    desc: Build the Odin game
+    cmds:
+      - odin build . -out={{.OUT}}
+
+  web-build:
+    desc: Build web version
+    # task web-build DEBUG="-debug"
+    cmds:
+      - odin run karl2d/build_web -- ./ {{.DEBUG}}
+
+  web:
+    desc: Build and serve web version
+    deps: [web-build]
+    cmds:
+      - python -m http.server 8000 --directory bin/web

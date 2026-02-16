@@ -1,4 +1,5 @@
 This is important for hacking processes.
+echo 1 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 
 This command modifies Linux kernel security settings for process tracing:
 
