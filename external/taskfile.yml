@@ -4,7 +4,7 @@ version: "3"
 vars:
   OUT: "bin/external"
   # karl2d game variables
-  INT_ADDR: 0x53A9F8
+  INT_ADDR: 0x1401340F8
   INT2_ADDR: 0x7FFDFBE95F60
 
 tasks:

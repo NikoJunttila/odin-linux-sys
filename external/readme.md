@@ -1,4 +1,4 @@
-
+Managed to find and edit int values from exe compiled on windows and ran on proton layer
 
 
 
@@ -23,13 +23,3 @@ Requirements
 Linux kernel 3.2+
 Appropriate permissions (same user or CAP_SYS_PTRACE)
 Target process must allow ptrace access
-
-Finding Memory Addresses
-Use tools like:
-
-PINCE (GUI memory scanner)
-gdb with /proc/PID/maps
-scanmem/GameConqueror
-
-Notes
-Returns bytes transferred and errno. Check err != .NONE for errors.

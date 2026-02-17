@@ -11,9 +11,9 @@ import "core:sys/linux"
 
 
 main :: proc() {
-	target_pid := pidbyname.pid_by_name("odingameforlearning")
+	target_pid := pidbyname.pid_by_name("odingameforexternal")
 	// previously I was trying to find target with wrong pid. pid_by_name gives me wrong results now.
-	// target_pid: linux.Pid = 46048
+	// target_pid: linux.Pid = 11453
 	assert(target_pid != 0)
 
 	for arg in os.args {
@@ -39,7 +39,7 @@ main :: proc() {
 	// 	fmt.println("failed to read string")
 	// }
 	read_int_and_write(target_pid, int64_addr, 1488)
-	read_int_and_write(target_pid, string_addr, 1488)
+	// read_int_and_write(target_pid, string_addr, 1488)
 }
 
 read_cstring_value :: proc(target_pid: linux.Pid, remote_addr: uintptr) -> (string, bool) {
