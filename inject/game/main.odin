@@ -33,7 +33,7 @@ count_down :: proc() {
 }
 
 send_pid_to_file :: proc() {
-	s := fmt.aprint("hack me. PID:", linux.getppid())
+	s := fmt.aprint("hack me. PID:", linux.getpid())
 	fmt.println(s)
 	file, errOpen := os.open(
 		"pidfile",

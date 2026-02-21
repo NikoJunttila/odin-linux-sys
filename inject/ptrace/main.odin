@@ -4,7 +4,7 @@ import "core:fmt"
 import "core:sys/linux"
 
 
-SHELLCODE :: []u8{0xeb, 0xfe}
+// SHELLCODE :: []u8{0xeb, 0xfe}
 
 main :: proc() {
 	pid := get_pid_from_file()
