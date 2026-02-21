@@ -11,6 +11,7 @@ PID_MAX_STR_LENGTH :: 64
 procfs_find_memory_region :: proc(
 	pid: linux.Pid,
 	permissions: string,
+	module_name: string = "",
 	get_region_start_address := true,
 ) -> uintptr {
 	maps_file_name := fmt.aprintf("/proc/%d/maps", pid)
@@ -25,6 +26,7 @@ procfs_find_memory_region :: proc(
 	for line in lines {
 		perms := get_permissions_from_line(line)
 		if !strings.contains(perms, permissions) do continue
+		if module_name != "" && !strings.contains(line, module_name) do continue
 		if get_region_start_address {
 			return get_start_address_from_maps_line(line)
 		} else {

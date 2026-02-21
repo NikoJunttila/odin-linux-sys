@@ -22,3 +22,7 @@ tasks:
     cmds:
       - odin build . -out={{.OUT}}
 
+  payload:
+    desc: Build the payload
+    cmds:
+      - odin build payload/ -build-mode:shared -out:payload/payload.so
