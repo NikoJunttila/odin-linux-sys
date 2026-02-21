@@ -1,0 +1,23 @@
+---
+version: "3"
+
+vars:
+  OUT: "bin/game" 
+
+tasks:
+  default:
+    desc: inject game
+    # deps: [game]
+    cmds:
+      - odin build ptrace/ -out=bin/injector
+      - sudo ./bin/injector
+  game:
+    desc: Run the Odin game
+    cmds:
+      - odin run game/ -out={{.OUT}}
+
+  build:
+    desc: Build the Odin game
+    cmds:
+      - odin build . -out={{.OUT}}
+
