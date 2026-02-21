@@ -23,7 +23,7 @@ procfs_find_memory_region :: proc(
 	lines := strings.split_lines(string(data))
 	defer delete(lines)
 	for line in lines {
-		perms := line
+		perms := get_permissions_from_line(line)
 		if !strings.contains(perms, permissions) do continue
 		if get_region_start_address {
 			return get_start_address_from_maps_line(line)
@@ -31,6 +31,7 @@ procfs_find_memory_region :: proc(
 			return get_end_address_from_maps_line(line)
 		}
 	}
+	fmt.println("cant find memory region with ", permissions)
 	return 0
 }
 

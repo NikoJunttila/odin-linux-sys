@@ -2,16 +2,32 @@ package game
 
 import "core:fmt"
 import os "core:os/os2"
+import "core:strings"
 import "core:sys/linux"
+import "core:thread"
 import "core:time"
+import rl "vendor:raylib"
 
+countDown := 9999
 
 main :: proc() {
-	intter := 10000
 	send_pid_to_file()
+	rl.InitWindow(800, 800, "example")
+	thread.create_and_start(count_down)
+	for !rl.WindowShouldClose() {
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.BLUE)
+		text := fmt.tprintf("countdown %d", countDown)
+		ctext := strings.clone_to_cstring(text, context.temp_allocator)
+		rl.DrawText(ctext, 50, 100, 50, rl.RED)
+		rl.EndDrawing()
+		free_all(context.temp_allocator)
+	}
+}
+
+count_down :: proc() {
 	for {
-		fmt.print(intter)
-		intter -= 1
+		countDown -= 1
 		time.sleep(time.Second)
 	}
 }
