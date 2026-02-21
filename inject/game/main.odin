@@ -20,6 +20,9 @@ main :: proc() {
 		text := fmt.tprintf("countdown %d", countDown)
 		ctext := strings.clone_to_cstring(text, context.temp_allocator)
 		rl.DrawText(ctext, 50, 100, 50, rl.RED)
+		address := fmt.aprintf("Address: %p", &countDown)
+		ctext2 := strings.clone_to_cstring(address, context.temp_allocator)
+		rl.DrawText(ctext2, 50, 300, 50, rl.RED)
 		rl.EndDrawing()
 		free_all(context.temp_allocator)
 	}
