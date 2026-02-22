@@ -20,7 +20,7 @@ tasks:
   build:
     desc: Build the Odin game
     cmds:
-      - odin build . -out={{.OUT}}
+      - odin build game/. -out={{.OUT}}
 
   payload:
     desc: Build the payload

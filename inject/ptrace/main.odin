@@ -7,9 +7,9 @@ import "core:sys/linux"
 // SHELLCODE :: []u8{0xeb, 0xfe}
 
 main :: proc() {
-	pid := get_pid_from_file()
+	// pid := get_pid_from_file()
+	pid := linux.Pid(143427)
 	fmt.println(pid)
-
 
 	if errno := linux.ptrace(linux.PTRACE_ATTACH, pid); errno != .NONE {
 		fmt.println(errno, " problem with attach")
@@ -27,7 +27,7 @@ main :: proc() {
 		fmt.println(errno, " problem with get regs")
 		return
 	}
-	
+
 	// 1. Find dlopen in target process
 	dlopen_addr := get_remote_dlopen_address(pid)
 	if dlopen_addr == 0 {
@@ -49,7 +49,7 @@ main :: proc() {
 	// Ensure null termination
 	path_bytes := make([]u8, len(payload_path) + 1)
 	defer delete(path_bytes)
-	for i in 0..<len(payload_path) {
+	for i in 0 ..< len(payload_path) {
 		path_bytes[i] = payload_path[i]
 	}
 	path_bytes[len(payload_path)] = 0
@@ -64,7 +64,7 @@ main :: proc() {
 	shellcode_addr := alloc_addr + uintptr(len(path_bytes))
 	sc := build_dlopen_shellcode(alloc_addr, dlopen_addr)
 	defer delete(sc)
-	
+
 	ok_write_sc := procfs_proc_mem_write(shellcode_addr, pid, sc)
 	if !ok_write_sc {
 		fmt.println("failed to write shellcode")

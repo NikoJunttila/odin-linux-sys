@@ -1,7 +1,6 @@
 package main
 
 import "core:encoding/endian"
-import "core:fmt"
 
 /*
   Generates the shellcode to call dlopen in x86_64.

@@ -11,7 +11,13 @@ import rl "vendor:raylib"
 countDown := 9999
 
 main :: proc() {
-	send_pid_to_file()
+	pidText := "find it manually"
+	when ODIN_OS == .Linux {
+		pid := linux.getpid()
+		pidText = fmt.aprintf("pid: %d", pid)
+		send_pid_to_file(uint(pid))
+	}
+	cPid := strings.clone_to_cstring(pidText)
 	rl.InitWindow(800, 800, "example")
 	thread.create_and_start(count_down)
 	for !rl.WindowShouldClose() {
@@ -23,6 +29,7 @@ main :: proc() {
 		address := fmt.aprintf("Address: %p", &countDown)
 		ctext2 := strings.clone_to_cstring(address, context.temp_allocator)
 		rl.DrawText(ctext2, 50, 300, 50, rl.RED)
+		rl.DrawText(cPid, 50, 500, 50, rl.RED)
 		rl.EndDrawing()
 		free_all(context.temp_allocator)
 	}
@@ -35,8 +42,8 @@ count_down :: proc() {
 	}
 }
 
-send_pid_to_file :: proc() {
-	s := fmt.aprint("hack me. PID:", linux.getpid())
+send_pid_to_file :: proc(pid: uint) {
+	s := fmt.aprint("hack me. PID:", pid)
 	fmt.println(s)
 	file, errOpen := os.open(
 		"pidfile",
