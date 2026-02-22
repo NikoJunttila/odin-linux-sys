@@ -6,6 +6,9 @@ import "core:strconv"
 import "core:strings"
 import "core:sys/linux"
 
+main :: proc() {
+	fmt.println(pid_by_name("windowsgame"))
+}
 
 pid_by_name :: proc(process_name: string) -> (pid: linux.Pid) {
 	directory, err2 := os.read_all_directory_by_path("/proc/", context.temp_allocator)
